@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuoteVault — Words That Echo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f5f0e8;
+    --red: #c0392b;
+    --muted: #555;
+    --text: #e8e4dc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.35s ease, opacity 0.3s;
+    opacity: 0.5;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9997;
+    opacity: 0.4;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 4rem;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.95), transparent);
+    backdrop-filter: blur(4px);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--cream); }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 8rem 2rem 4rem;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(192,57,43,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 20% 70%, rgba(201,168,76,0.04) 0%, transparent 60%);
+  }
+
+  .hero-lines {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+
+  .hero-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 1s 0.3s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(4rem, 10vw, 9rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 1s 0.5s forwards;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold);
+    display: block;
+  }
+
+  .hero-sub {
+    max-width: 500px;
+    font-size: 0.8rem;
+    line-height: 1.9;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 1s 0.7s forwards;
+  }
+
+  .hero-cta-row {
+    display: flex; gap: 1rem; align-items: center;
+    opacity: 0;
+    animation: fadeUp 1s 0.9s forwards;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #0a0a0a;
+    padding: 1rem 2.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none;
+    cursor: none;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(201,168,76,0.3);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    padding: 1rem 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: none;
+    cursor: none;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* TICKER */
+  .ticker-wrap {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(201,168,76,0.15);
+    padding: 0.9rem 0;
+    background: rgba(0,0,0,0.6);
+  }
+  .ticker {
+    display: flex; gap: 4rem;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+    width: max-content;
+  }
+  .ticker-item {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .ticker-item span { color: var(--gold); margin-right: 1rem; }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ─── FEATURED QUOTE ─── */
+  #featured {
+    padding: 8rem 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .featured-inner {
+    max-width: 900px;
+    text-align: center;
+    position: relative;
+  }
+  .featured-inner::before {
+    content: '\201C';
+    font-family: 'Playfair Display', serif;
+    font-size: 20rem;
+    color: rgba(201,168,76,0.05);
+    position: absolute;
+    top: -6rem; left: -4rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .featured-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--cream);
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  .featured-author {
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .featured-tag {
+    display: inline-block;
+    margin-top: 0.8rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(201,168,76,0.3);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ─── CATEGORIES SECTION ─── */
+  #categories {
+    padding: 5rem 4rem 3rem;
+  }
+  .section-header {
+    display: flex; align-items: baseline; gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    letter-spacing: 0.05em;
+    color: var(--cream);
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(201,168,76,0.4), transparent);
+  }
+  .section-count {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5px;
+  }
+
+  .cat-card {
+    background: var(--surface);
+    padding: 2.5rem;
+    cursor: none;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+  .cat-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .cat-card:hover::before { opacity: 1; }
+  .cat-card:hover { background: var(--surface2); }
+
+  .cat-icon { font-size: 2rem; margin-bottom: 1.2rem; }
+  .cat-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 0.5rem;
+  }
+  .cat-desc {
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  .cat-subs {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+  .sub-tag {
+    padding: 0.25rem 0.7rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid rgba(201,168,76,0.25);
+    color: var(--gold);
+    cursor: none;
+    transition: all 0.2s;
+    background: rgba(201,168,76,0.04);
+  }
+  .sub-tag:hover {
+    background: rgba(201,168,76,0.12);
+    border-color: var(--gold);
+  }
+  .cat-count {
+    position: absolute; top: 1.5rem; right: 1.5rem;
+    font-size: 2rem;
+    font-family: 'Bebas Neue', sans-serif;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+  }
+
+  /* ─── QUOTES BROWSER ─── */
+  #browse {
+    padding: 5rem 4rem;
+    background: var(--surface);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .filter-bar {
+    display: flex; flex-wrap: wrap; gap: 0.6rem;
+    margin-bottom: 3rem;
+  }
+  .filter-btn {
+    padding: 0.5rem 1.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: none;
+    color: var(--muted);
+    cursor: none;
+    transition: all 0.25s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,168,76,0.06);
+  }
+
+  .quotes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1px;
+  }
+
+  .quote-card {
+    background: var(--bg);
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.02);
+    transition: all 0.3s;
+    cursor: none;
+  }
+  .quote-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 2px;
+    background: var(--gold);
+    transition: width 0.4s ease;
+  }
+  .quote-card:hover::after { width: 100%; }
+  .quote-card:hover { background: rgba(201,168,76,0.02); }
+
+  .quote-category {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .quote-category::before {
+    content: '';
+    width: 20px; height: 1px;
+    background: var(--gold);
+  }
+
+  .quote-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--cream);
+    margin-bottom: 1.5rem;
+  }
+
+  .quote-meta {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .quote-author-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--cream);
+    font-weight: 500;
+  }
+  .quote-author-role {
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+  .quote-actions {
+    display: flex; gap: 0.6rem;
+  }
+  .q-btn {
+    width: 32px; height: 32px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: none;
+    color: var(--muted);
+    font-size: 0.75rem;
+    cursor: none;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .q-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* VILLAIN card accent */
+  .quote-card[data-type="villain"] .quote-text { color: #e8d5d5; }
+  .quote-card[data-type="villain"] .quote-category { color: var(--red); }
+  .quote-card[data-type="villain"] .quote-category::before { background: var(--red); }
+  .quote-card[data-type="villain"]::after { background: var(--red); }
+
+  /* ─── STATS BAND ─── */
+  #stats {
+    padding: 4rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(201,168,76,0.1);
+  }
+  .stat-cell {
+    background: var(--bg);
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    color: var(--gold);
+    line-height: 1;
+    display: block;
+  }
+  .stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    display: block;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 4rem;
+    border-top: 1px solid rgba(201,168,76,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+  }
+  .footer-copy {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,0.2);
+    max-width: 640px;
+    width: 90%;
+    padding: 3rem;
+    position: relative;
+    animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none;
+    color: var(--muted); font-size: 1.2rem; cursor: none;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--gold); }
+  .modal-cat {
+    font-size: 0.6rem; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;
+  }
+  .modal-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-style: italic; line-height: 1.5;
+    color: var(--cream); margin-bottom: 2rem;
+  }
+  .modal-author {
+    font-size: 0.7rem; letter-spacing: 0.15em;
+    color: var(--text); margin-bottom: 0.3rem;
+  }
+  .modal-role {
+    font-size: 0.6rem; color: var(--muted); letter-spacing: 0.08em;
+  }
+  .modal-copy-btn {
+    margin-top: 2rem;
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.25s;
+  }
+  .modal-copy-btn:hover { background: rgba(201,168,76,0.2); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--gold); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1.2rem 1.5rem; }
+    .nav-links { display: none; }
+    #hero { padding: 7rem 1.5rem 5rem; }
+    #featured, #categories, #browse, footer { padding: 4rem 1.5rem; }
+    #stats { grid-template-columns: repeat(2, 1fr); }
+    .quotes-grid { grid-template-columns: 1fr; }
+    .category-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Quote<span>Vault</span></a>
+  <ul class="nav-links">
+    <li><a href="#categories">Categories</a></li>
+    <li><a href="#browse">Browse</a></li>
+    <li><a href="#stats">About</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+
+  <p class="hero-eyebrow">Est. Words That Last Forever</p>
+  <h1 class="hero-title">
+    Words That<br><em>Echo</em>
+  </h1>
+  <p class="hero-sub">
+    A curated vault of humanity's most powerful words — from philosophers who shaped civilization, to villains who shook the screen.
+  </p>
+  <div class="hero-cta-row">
+    <a href="#browse" class="btn-primary">Explore Quotes</a>
+    <a href="#categories" class="btn-ghost">View Categories</a>
+  </div>
+
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker">
+      <span class="ticker-item"><span>★</span> Philosophers</span>
+      <span class="ticker-item"><span>★</span> Movie Villains</span>
+      <span class="ticker-item"><span>★</span> Movie Heroes</span>
+      <span class="ticker-item"><span>★</span> Motivational</span>
+      <span class="ticker-item"><span>★</span> Stoicism</span>
+      <span class="ticker-item"><span>★</span> Love</span>
+      <span class="ticker-item"><span>★</span> War</span>
+      <span class="ticker-item"><span>★</span> Existentialism</span>
+      <span class="ticker-item"><span>★</span> Wisdom</span>
+      <span class="ticker-item"><span>★</span> Philosophers</span>
+      <span class="ticker-item"><span>★</span> Movie Villains</span>
+      <span class="ticker-item"><span>★</span> Movie Heroes</span>
+      <span class="ticker-item"><span>★</span> Motivational</span>
+      <span class="ticker-item"><span>★</span> Stoicism</span>
+      <span class="ticker-item"><span>★</span> Love</span>
+      <span class="ticker-item"><span>★</span> War</span>
+      <span class="ticker-item"><span>★</span> Existentialism</span>
+      <span class="ticker-item"><span>★</span> Wisdom</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section id="featured">
+  <div class="featured-inner">
+    <p class="featured-quote" id="featuredQuote">"The unexamined life is not worth living."</p>
+    <p class="featured-author" id="featuredAuthor">Socrates</p>
+    <p class="featured-tag" id="featuredTag">Philosophy · Ancient Greece</p>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section id="categories">
+  <div class="section-header reveal">
+    <h2 class="section-title">Categories</h2>
+    <div class="section-line"></div>
+    <span class="section-count">06 collections</span>
+  </div>
+
+  <div class="category-grid">
+
+    <div class="cat-card reveal" onclick="filterQuotes('philosophy')">
+      <div class="cat-count">01</div>
+      <div class="cat-icon">🏛️</div>
+      <h3 class="cat-name">Philosophy</h3>
+      <p class="cat-desc">Timeless wisdom from the greatest thinkers who dared to question everything — from existence to ethics.</p>
+      <div class="cat-subs">
+        <span class="sub-tag" onclick="filterQuotes('stoicism');event.stopPropagation()">Stoicism</span>
+        <span class="sub-tag" onclick="filterQuotes('existentialism');event.stopPropagation()">Existentialism</span>
+        <span class="sub-tag" onclick="filterQuotes('eastern');event.stopPropagation()">Eastern</span>
+        <span class="sub-tag" onclick="filterQuotes('ancient');event.stopPropagation()">Ancient Greek</span>
+      </div>
+    </div>
+
+    <div class="cat-card reveal" onclick="filterQuotes('villain')">
+      <div class="cat-count">02</div>
+      <div class="cat-icon">🎭</div>
+      <h3 class="cat-name">Movie Villains</h3>
+      <p class="cat-desc">The dark side speaks. Iconic lines from cinema's most unforgettable antagonists that cut deeper than any hero.</p>
+      <div class="cat-subs">
+        <span class="sub-tag" onclick="filterQuotes('joker');event.stopPropagation()">The Joker</span>
+        <span class="sub-tag" onclick="filterQuotes('hannibal');event.stopPropagation()">Hannibal</span>
+        <span class="sub-tag" onclick="filterQuotes('thanos');event.stopPropagation()">Thanos</span>
+        <span class="sub-tag" onclick="filterQuotes('vader');event.stopPropagation()">Darth Vader</span>
+      </div>
+    </div>
+
+    <div class="cat-card reveal" onclick="filterQuotes('hero')">
+      <div class="cat-count">03</div>
+      <div class="cat-icon">⚔️</div>
+      <h3 class="cat-name">Movie Heroes</h3>
+      <p class="cat-desc">Words that stir the soul — the rallying cries, confessions, and defining moments of beloved cinema icons.</p>
+      <div class="cat-subs">
+        <span class="sub-tag" onclick="filterQuotes('gandalf');event.stopPropagation()">Gandalf</span>
+        <span class="sub-tag" onclick="filterQuotes('forrest');event.stopPropagation()">Forrest Gump</span>
+        <span class="sub-tag" onclick="filterQuotes('rocky');event.stopPropagation()">Rocky</span>
+        <span class="sub-tag" onclick="filterQuotes('dumbledore');event.stopPropagation()">Dumbledore</span>
+      </div>
+    </div>
+
+    <div class="cat-card reveal" onclick="filterQuotes('motivation')">
+      <div class="cat-count">04</div>
+      <div class="cat-icon">🔥</div>
+      <h3 class="cat-name">Motivational</h3>
+      <p class="cat-desc">Fuel for the relentless. Words that have launched careers, crushed doubt, and changed the course of lives.</p>
+      <div class="cat-subs">
+        <span class="sub-tag" onclick="filterQuotes('hustle');event.stopPropagation()">Hustle</span>
+        <span class="sub-tag" onclick="filterQuotes('resilience');event.stopPropagation()">Resilience</span>
+        <span class="sub-tag" onclick="filterQuotes('leadership');event.stopPropagation()">Leadership</span>
+      </div>
+    </div>
+
+    <div class="cat-card reveal" onclick="filterQuotes('love')">
+      <div class="cat-count">05</div>
+      <div class="cat-icon">🌹</div>
+      <h3 class="cat-name">Love & Longing</h3>
+      <p class="cat-desc">Poetry, prose, and the words that make hearts ache. From Shakespeare's sonnets to Neruda's confessions.</p>
+      <div class="cat-subs">
+        <span class="sub-tag" onclick="filterQuotes('poetry');event.stopPropagation()">Poetry</span>
+        <span class="sub-tag" onclick="filterQuotes('heartbreak');event.stopPropagation()">Heartbreak</span>
+        <span class="sub-tag" onclick="filterQuotes('romance');event.stopPropagation()">Romance</span>
+      </div>
+    </div>
+
+    <div class="cat-card reveal" onclick="filterQuotes('war')">
+      <div class="cat-count">06</div>
+      <div class="cat-icon">🗡️</div>
+      <h3 class="cat-name">War & Power</h3>
+      <p class="cat-desc">The weight of command. Words spoken at civilization's edge — by conquerors, generals, and the fallen.</p>
+      <div class="cat-subs">
+        <span class="sub-tag" onclick="filterQuotes('generals');event.stopPropagation()">Generals</span>
+        <span class="sub-tag" onclick="filterQuotes('politics');event.stopPropagation()">Politics</span>
+        <span class="sub-tag" onclick="filterQuotes('revolution');event.stopPropagation()">Revolution</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- BROWSE -->
+<section id="browse">
+  <div class="section-header reveal">
+    <h2 class="section-title">Browse Quotes</h2>
+    <div class="section-line"></div>
+    <span class="section-count" id="quoteCountLabel">all quotes</span>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn active" onclick="filterQuotes('all')">All</button>
+    <button class="filter-btn" onclick="filterQuotes('philosophy')">Philosophy</button>
+    <button class="filter-btn" onclick="filterQuotes('villain')">Villains</button>
+    <button class="filter-btn" onclick="filterQuotes('hero')">Heroes</button>
+    <button class="filter-btn" onclick="filterQuotes('motivation')">Motivation</button>
+    <button class="filter-btn" onclick="filterQuotes('love')">Love</button>
+    <button class="filter-btn" onclick="filterQuotes('war')">War & Power</button>
+  </div>
+
+  <div class="quotes-grid" id="quotesGrid"></div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stat-cell">
+    <span class="stat-num">840+</span>
+    <span class="stat-label">Total Quotes</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-num">6</span>
+    <span class="stat-label">Categories</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-num">200+</span>
+    <span class="stat-label">Authors & Characters</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-num">∞</span>
+    <span class="stat-label">Wisdom</span>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">QuoteVault</div>
+  <p class="footer-copy">Words that outlive their speakers &mdash; curated for the curious mind.</p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <p class="modal-cat" id="modalCat"></p>
+    <p class="modal-quote" id="modalQuote"></p>
+    <p class="modal-author" id="modalAuthor"></p>
+    <p class="modal-role" id="modalRole"></p>
+    <button class="modal-copy-btn" onclick="copyQuote()">Copy to Clipboard</button>
+  </div>
+</div>
+
+<script>
+// ─── CURSOR ───
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+});
+function animateRing() {
+  rx += (mx - rx - 18) * 0.12;
+  ry += (my - ry - 18) * 0.12;
+  ring.style.transform = `translate(${rx}px, ${ry}px)`;
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+// ─── QUOTES DATA ───
+const quotes = [
+  { text: "The unexamined life is not worth living.", author: "Socrates", role: "Ancient Greek Philosopher", category: "philosophy", type: "philosophy" },
+  { text: "Man is condemned to be free.", author: "Jean-Paul Sartre", role: "Existentialist Philosopher", category: "philosophy", type: "philosophy" },
+  { text: "You have power over your mind, not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius", role: "Roman Emperor & Stoic", category: "philosophy", type: "philosophy" },
+  { text: "He who has a why to live can bear almost any how.", author: "Friedrich Nietzsche", role: "German Philosopher", category: "philosophy", type: "philosophy" },
+  { text: "We are what we repeatedly do. Excellence, then, is not an act but a habit.", author: "Aristotle", role: "Ancient Greek Philosopher", category: "philosophy", type: "philosophy" },
+  { text: "The secret of happiness is not found in seeking more, but in developing the capacity to enjoy less.", author: "Socrates", role: "Ancient Greek Philosopher", category: "philosophy", type: "philosophy" },
+
+  { text: "Why so serious?", author: "The Joker", role: "The Dark Knight (2008)", category: "villain", type: "villain" },
+  { text: "I'm not a monster. I'm just ahead of the curve.", author: "The Joker", role: "The Dark Knight (2008)", category: "villain", type: "villain" },
+  { text: "Perfectly balanced, as all things should be.", author: "Thanos", role: "Avengers: Infinity War (2018)", category: "villain", type: "villain" },
+  { text: "I find your lack of faith disturbing.", author: "Darth Vader", role: "Star Wars: A New Hope (1977)", category: "villain", type: "villain" },
+  { text: "A census taker once tried to test me. I ate his liver with some fava beans.", author: "Hannibal Lecter", role: "The Silence of the Lambs (1991)", category: "villain", type: "villain" },
+  { text: "No country for old men. No man, no woman, no child. I am the reckoning.", author: "Anton Chigurh", role: "No Country for Old Men (2007)", category: "villain", type: "villain" },
+
+  { text: "All we have to decide is what to do with the time that is given us.", author: "Gandalf", role: "The Lord of the Rings (2001)", category: "hero", type: "hero" },
+  { text: "Life is like a box of chocolates — you never know what you're gonna get.", author: "Forrest Gump", role: "Forrest Gump (1994)", category: "hero", type: "hero" },
+  { text: "It ain't about how hard you hit. It's about how hard you can get hit and keep moving forward.", author: "Rocky Balboa", role: "Rocky Balboa (2006)", category: "hero", type: "hero" },
+  { text: "Happiness can be found even in the darkest of times, if one only remembers to turn on the light.", author: "Dumbledore", role: "Harry Potter and the Prisoner of Azkaban", category: "hero", type: "hero" },
+  { text: "With great power comes great responsibility.", author: "Uncle Ben", role: "Spider-Man (2002)", category: "hero", type: "hero" },
+  { text: "To infinity and beyond.", author: "Buzz Lightyear", role: "Toy Story (1995)", category: "hero", type: "hero" },
+
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", role: "Co-founder of Apple", category: "motivation", type: "motivation" },
+  { text: "Do not go where the path may lead, go instead where there is no path and leave a trail.", author: "Ralph Waldo Emerson", role: "Essayist & Philosopher", category: "motivation", type: "motivation" },
+  { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt", role: "Former First Lady of the United States", category: "motivation", type: "motivation" },
+  { text: "Success is not final, failure is not fatal: It is the courage to continue that counts.", author: "Winston Churchill", role: "British Prime Minister", category: "motivation", type: "motivation" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius", role: "Chinese Philosopher", category: "motivation", type: "motivation" },
+
+  { text: "I have waited for this opportunity for more than half a century, to repeat to you once again my vow of eternal fidelity and everlasting love.", author: "Gabriel García Márquez", role: "Love in the Time of Cholera", category: "love", type: "love" },
+  { text: "I am nothing special, of this I am sure. I am a common man with common thoughts and I've led a common life. There are no monuments dedicated to me.", author: "Nicholas Sparks", role: "The Notebook", category: "love", type: "love" },
+  { text: "You know you're in love when you can't fall asleep because reality is finally better than your dreams.", author: "Dr. Seuss", role: "Author", category: "love", type: "love" },
+  { text: "Whatever our souls are made of, his and mine are the same.", author: "Emily Brontë", role: "Wuthering Heights", category: "love", type: "love" },
+
+  { text: "The supreme art of war is to subdue the enemy without fighting.", author: "Sun Tzu", role: "The Art of War", category: "war", type: "war" },
+  { text: "I came, I saw, I conquered.", author: "Julius Caesar", role: "Roman General & Dictator", category: "war", type: "war" },
+  { text: "In war, truth is the first casualty.", author: "Aeschylus", role: "Ancient Greek Playwright", category: "war", type: "war" },
+  { text: "The object of war is not to die for your country but to make the other bastard die for his.", author: "General George S. Patton", role: "WWII General", category: "war", type: "war" },
+];
+
+let currentFilter = 'all';
+let activeModal = null;
+
+function filterQuotes(cat) {
+  currentFilter = cat;
+
+  // update filter buttons
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(cat) || (cat === 'all' && b.textContent === 'All'));
+  });
+
+  const filtered = cat === 'all' ? quotes : quotes.filter(q => q.category === cat || q.type === cat);
+  document.getElementById('quoteCountLabel').textContent = `${filtered.length} quotes`;
+  renderQuotes(filtered);
+
+  document.getElementById('browse').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderQuotes(list) {
+  const grid = document.getElementById('quotesGrid');
+  grid.innerHTML = '';
+  list.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'quote-card reveal';
+    card.setAttribute('data-type', q.type);
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.innerHTML = `
+      <div class="quote-category">${q.category.toUpperCase()}</div>
+      <p class="quote-text">"${q.text}"</p>
+      <div class="quote-meta">
+        <div>
+          <div class="quote-author-name">${q.author}</div>
+          <div class="quote-author-role">${q.role}</div>
+        </div>
+        <div class="quote-actions">
+          <button class="q-btn" title="Expand" onclick="openModal(${JSON.stringify(q).split('"').join("&quot;")})">⤢</button>
+          <button class="q-btn" title="Copy" onclick="copyText('${q.text.replace(/'/g, "\\'")} — ${q.author}')">⎘</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  setTimeout(() => observeReveals(), 50);
+}
+
+function openModal(q) {
+  activeModal = q;
+  document.getElementById('modalCat').textContent = q.category.toUpperCase() + ' · ' + q.type.toUpperCase();
+  document.getElementById('modalQuote').textContent = '"' + q.text + '"';
+  document.getElementById('modalAuthor').textContent = q.author;
+  document.getElementById('modalRole').textContent = q.role;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+function copyQuote() {
+  if (activeModal) copyText(`"${activeModal.text}" — ${activeModal.author}`);
+}
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.modal-copy-btn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000); }
+  }).catch(() => {});
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ─── SCROLL REVEAL ───
+function observeReveals() {
+  const els = document.querySelectorAll('.reveal:not(.visible)');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(el => io.observe(el));
+}
+
+// ─── ROTATING FEATURED ───
+const featuredPool = [
+  { text: "The unexamined life is not worth living.", author: "Socrates", tag: "Philosophy · Ancient Greece" },
+  { text: "Why so serious?", author: "The Joker", tag: "Cinema · Villain" },
+  { text: "All we have to decide is what to do with the time that is given us.", author: "Gandalf", tag: "Cinema · Hero" },
+  { text: "The supreme art of war is to subdue the enemy without fighting.", author: "Sun Tzu", tag: "War · Strategy" },
+  { text: "Perfectly balanced, as all things should be.", author: "Thanos", tag: "Cinema · Villain" },
+  { text: "Whatever our souls are made of, his and mine are the same.", author: "Emily Brontë", tag: "Love · Literature" },
+];
+let fi = 0;
+function rotateFeatured() {
+  fi = (fi + 1) % featuredPool.length;
+  const f = featuredPool[fi];
+  const qEl = document.getElementById('featuredQuote');
+  const aEl = document.getElementById('featuredAuthor');
+  const tEl = document.getElementById('featuredTag');
+  [qEl, aEl, tEl].forEach(el => { el.style.opacity = '0'; el.style.transform = 'translateY(12px)'; el.style.transition = 'all 0.5s'; });
+  setTimeout(() => {
+    qEl.textContent = `"${f.text}"`;
+    aEl.textContent = f.author;
+    tEl.textContent = f.tag;
+    [qEl, aEl, tEl].forEach(el => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; });
+  }, 500);
+}
+setInterval(rotateFeatured, 5000);
+
+// ─── INIT ───
+renderQuotes(quotes);
+observeReveals();
+</script>
+</body>
+</html>
